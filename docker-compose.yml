@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: macrolens
+      POSTGRES_USER: macrolens
+      POSTGRES_PASSWORD: macrolens_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - macrolens-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - macrolens-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./config/.env
+    environment:
+      - DATABASE_URL=postgresql://macrolens:macrolens_dev@postgres:5432/macrolens
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./backend:/app
+      - ./config:/app/config
+      - /app/__pycache__
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - macrolens-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - macrolens-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  macrolens-network:
+    driver: bridge

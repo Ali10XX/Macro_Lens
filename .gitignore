@@ -1,0 +1,85 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+build/
+dist/
+.next/
+out/
+
+# Database
+*.db
+*.sqlite3
+
+# Redis
+dump.rdb
+
+# Docker
+docker-compose.override.yml
+
+# Testing
+coverage/
+.coverage
+.pytest_cache/
+.nyc_output
+
+# AI Models
+*.pkl
+*.joblib
+models/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# React Native
+.expo/
+.expo-shared/
+
+# Mobile builds
+*.apk
+*.ipa
+android/app/build/
+ios/build/
+
+# Ignore embedded repositories
+SuperClaude/
+claude_code-gemini-mcp/
