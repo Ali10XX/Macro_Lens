@@ -17,14 +17,21 @@ class Settings(BaseSettings):
     # AI/ML API keys
     GOOGLE_API_KEY: str = ""
     
-    # USDA Food Data API
+    # External API keys
+    API_NINJAS_KEY: str = ""
+    SPOONACULAR_API_KEY: str = ""
     USDA_API_KEY: str = ""
+    EDAMAM_APP_KEY: str = ""
+    EDAMAM_APP_ID: str = ""
+    NEXT_PUBLIC_USDA_API_KEY: str = ""
+    NEXT_PUBLIC_NUTRITION_APP_KEY: str = ""
+    NEXT_PUBLIC_HF_TOKEN: str = ""
     
     # Environment
     ENVIRONMENT: str = "development"
     
     # CORS settings
-    ALLOWED_HOSTS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    ALLOWED_HOSTS: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:8000", "http://localhost:8001"]
     
     # File upload settings
     MAX_FILE_SIZE: int = 50 * 1024 * 1024  # 50MB

@@ -1,9 +1,11 @@
 import os
 import tempfile
-from typing import Dict, Optional
+import asyncio
+from typing import Dict, Optional, List
 from moviepy.editor import VideoFileClip
 import ffmpeg
 from app.core.config import settings
+from app.core.premium import check_video_upload_limit
 
 class VideoProcessor:
     def __init__(self):
@@ -67,6 +69,37 @@ class VideoProcessor:
         except Exception as e:
             raise Exception(f"Error extracting frames: {str(e)}")
 
+    async def process_video_for_recipe_extraction(self, video_path: str, user_id: str) -> Dict:
+        """Complete video processing pipeline for recipe extraction"""
+        # Check user limits
+        can_upload = await check_video_upload_limit(user_id)
+        if not can_upload:
+            raise Exception("Video upload limit exceeded for this month")
+        
+        try:
+            # Extract metadata
+            metadata = await self.extract_video_metadata(video_path)
+            
+            # Extract frames for potential OCR
+            frames = await self.extract_frames(video_path, num_frames=3)
+            
+            # Combine all extracted information
+            result = {
+                "metadata": metadata,
+                "frame_paths": frames,
+                "video_info": {
+                    "duration": metadata.get("duration", 0),
+                    "format": metadata.get("format", ""),
+                    "size_bytes": metadata.get("size", 0)
+                },
+                "extraction_ready": True
+            }
+            
+            return result
+            
+        except Exception as e:
+            raise Exception(f"Video processing failed: {str(e)}")
+
     async def cleanup_temp_files(self, file_paths: list):
         """Clean up temporary files"""
         for file_path in file_paths:
@@ -75,5 +108,21 @@ class VideoProcessor:
                     os.remove(file_path)
             except Exception:
                 pass  # Ignore cleanup errors
+
+    async def get_video_thumbnail(self, video_path: str, time_offset: float = 1.0) -> str:
+        """Generate thumbnail from video at specified time"""
+        try:
+            thumbnail_path = f"/tmp/thumb_{os.getpid()}_{time_offset}.jpg"
+            
+            with VideoFileClip(video_path) as clip:
+                if time_offset > clip.duration:
+                    time_offset = clip.duration / 2
+                
+                clip.save_frame(thumbnail_path, t=time_offset)
+                
+            return thumbnail_path
+            
+        except Exception as e:
+            raise Exception(f"Thumbnail generation failed: {str(e)}")
 
 video_processor = VideoProcessor()

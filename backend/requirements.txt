@@ -7,10 +7,11 @@ python-multipart==0.0.6
 asyncpg==0.29.0
 databases[postgresql]==0.8.0
 alembic==1.12.1
-sqlalchemy==2.0.23
+sqlalchemy==1.4.53
+psycopg2-binary==2.9.9
 
 # Redis
-redis==5.0.1
+redis==4.6.0
 aioredis==2.0.1
 
 # Authentication & Security
@@ -40,6 +41,8 @@ aiohttp==3.9.1
 pandas==2.1.4
 numpy==1.25.2
 pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
 
 # File handling
 python-magic==0.4.27
