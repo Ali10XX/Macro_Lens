@@ -80,6 +80,13 @@ temp/
 android/app/build/
 ios/build/
 
+# Secrets and sensitive files
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
 # Ignore embedded repositories
 SuperClaude/
 claude_code-gemini-mcp/
