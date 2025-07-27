@@ -1,8 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(mkdir:*)"
+      "WebFetch(domain:wonderful-twilight-6f30df.netlify.app)",
+      "mcp__gemini-collab__ask_gemini"
     ],
     "deny": []
   }

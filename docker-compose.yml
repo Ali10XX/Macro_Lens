@@ -4,23 +4,42 @@ services:
     environment:
       POSTGRES_DB: macrolens
       POSTGRES_USER: macrolens
-      POSTGRES_PASSWORD: macrolens_dev
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    # Remove port exposure - only accessible within network
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/migrations:/docker-entrypoint-initdb.d
     networks:
       - macrolens-network
+    secrets:
+      - postgres_password
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: "70:70"  # postgres user
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # Remove port exposure - only accessible within network
+    # ports:
+    #   - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - macrolens-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: "999:999"  # redis user
+    read_only: true
+    tmpfs:
+      - /tmp
 
   backend:
     build:
@@ -31,41 +50,70 @@ services:
     env_file:
       - ./config/.env
     environment:
-      - DATABASE_URL=postgresql://macrolens:macrolens_dev@postgres:5432/macrolens
+      - DATABASE_URL=postgresql://macrolens@postgres:5432/macrolens
       - REDIS_URL=redis://redis:6379
-    volumes:
-      - ./backend:/app
-      - ./config:/app/config
-      - /app/__pycache__
+    # Remove volume mounts in production - security risk
+    # volumes:
+    #   - ./backend:/app
+    #   - ./config:/app/config
+    #   - /app/__pycache__
     depends_on:
       - postgres
       - redis
     networks:
       - macrolens-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    secrets:
+      - postgres_password
+    # Use production command instead of development with --reload
+    # command: uvicorn app.simple_main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NODE_ENV=development
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - NODE_ENV=production  # Use production mode
+    # Remove volume mounts in production - security risk
+    # volumes:
+    #   - ./frontend:/app
+    #   - /app/node_modules
+    #   - /app/.next
     depends_on:
       - backend
     networks:
       - macrolens-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
 
 networks:
   macrolens-network:
     driver: bridge
+    internal: false  # Allow external access for frontend
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt

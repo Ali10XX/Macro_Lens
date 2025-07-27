@@ -47,21 +47,27 @@ async def register(user_data: UserCreate):
 
 @router.post("/login", response_model=Token)
 async def login(credentials: UserLogin):
-    # Find user by email
+    # Find user by email or username
     user = await database.fetch_one(
-        "SELECT * FROM users WHERE email = :email AND is_active = true",
-        {"email": credentials.email}
+        "SELECT * FROM users WHERE (email = :identifier OR username = :identifier) AND is_active = true",
+        {"identifier": credentials.identifier}
     )
     
     if not user or not verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Incorrect username/email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
     access_token = create_access_token(subject=user.id)
-    return Token(access_token=access_token, token_type="bearer")
+    
+    # Return token with user data for frontend
+    return Token(
+        access_token=access_token, 
+        token_type="bearer",
+        user=UserResponse(**user)
+    )
 
 @router.post("/logout")
 async def logout():
